@@ -1,0 +1,3 @@
+*.ipch
+serialport/Debug/
+serialport.sdf
