@@ -40,7 +40,7 @@ BOOL CComPortCombo::InitList(int nDefPort /*= -1*/)
 	// Should be drop-down list without edit field.
 	// CBS_DROPDOWNLIST = 3 while CBS_SIMPLE = 1 and CBS_DROPDOWN = 2
 
-	int i; 
+	unsigned int i; 
 	ASSERT((GetStyle() & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST);
 
 	m_nDefPort = nDefPort;							// use member var for access by call back function
@@ -62,7 +62,7 @@ BOOL CComPortCombo::InitList(int nDefPort /*= -1*/)
 #ifdef CENUMERATESERIAL_USE_STL
 		for (i = 0; i < ports.size(); i++)
 		{
-			strtemp.Format(_T("%s COM%u"), names[i].c_str(), ports[i] );
+			strtemp.Format(_T("%s (COM%u)"), names[i].c_str(), ports[i] );
 			int nItem = AddString(strtemp);
 			SetItemData(nItem, ports[i]);
 

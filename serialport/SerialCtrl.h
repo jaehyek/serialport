@@ -67,7 +67,7 @@ public:
 	void ClosePort();//close serial port
 	virtual void OnEventClose(BOOL bSuccess);//handle the event whether the port is successfully closed
 	virtual void OnEventRead(CString inPacket,int inLength);// handle the received data from serial
-	void Write(CString& outPacket,int outLength);// write data directly 
+	void Write(char* outPacket,int outLength);// write data directly 
 	virtual void OnEventWrite(int nWritten); //return how many bytes has been written
 
 	BOOL GetSendActivateValue(void); 

@@ -160,7 +160,7 @@ BOOL SerialCtrl::Write(const char * outputData, const unsigned int & sizeBuffer,
 	b = outputData[1];
 	c = outputData[2];
 	d = outputData[3];
-	e = outputData[3];
+	e = outputData[4];
 
 	if (length > 0)
 	{
@@ -409,7 +409,7 @@ void CSerialIO::OnEventRead(CString inPacket,int inLength)
 	return;
 }
 
-void CSerialIO::Write(CString& outPacket,int outLength)
+void CSerialIO::Write( char* outPacket,int outLength)
 {
 	if(outLength<=MAX_SEND_BUFFER)
 	{

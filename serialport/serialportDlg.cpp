@@ -306,5 +306,8 @@ void CserialportDlg::OnBnClickedButtonWr()
 {
     CString strW;
     m_editWrite.GetWindowText(strW);
-    Write(strW + CString("\r") , strW.GetLength()+1);
+
+    CT2A ascii(strW);
+
+    Write(ascii.m_psz , strlen(ascii.m_psz) );
 }
