@@ -33,6 +33,38 @@
 #include <afxcontrolbars.h>     // MFC의 리본 및 컨트롤 막대 지원
 
 
+//#############################################################################################
+//  definitions by jaehyek 
+
+#include <tchar.h>
+#include <setupapi.h>
+#include <malloc.h>
+#include <winspool.h>
+#include <Wbemcli.h>
+#include <comdef.h>
+#include <stdio.h>
+
+#define CENUMERATESERIAL_USE_STL //Uncomment this line if you want to test the MFC / ATL support in CEnumerateSerial
+
+#ifdef CENUMERATESERIAL_USE_STL
+//Pull in STL support
+#include <vector>
+#include <string>
+#endif
+
+//Out of the box lets exclude support for CEnumerateSerial::UsingComDB on the Windows SDK 7.1 or earlier since msports.h
+//is only available with the Windows SDK 8 or later.
+#include <ntverp.h>
+#if VER_PRODUCTBUILD <= 7600
+#define NO_CENUMERATESERIAL_USING_COMDB
+#endif
+
+#ifndef NO_CENUMERATESERIAL_USING_COMDB
+#include <msports.h>
+#endif //#ifndef NO_CENUMERATESERIAL_USING_COMDB
+
+
+
 
 
 

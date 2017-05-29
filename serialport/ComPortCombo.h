@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EnumDevices.h"
+#include "EnumSerial.h"
 
 // CComPortCombo
 
@@ -14,16 +14,16 @@ public:
 
 	BOOL InitList(int nDefPort = -1);
 
-	inline BOOL InitList(LPCTSTR lpszPort) 
-	{ return InitList(CEnumDevices::GetPortFromName(lpszPort)); }
-	inline BOOL IsPhysicalPort() const  
-	{ return GetCurData() && !(GetCurData() & DATA_VIRTUAL_MASK); }
-	inline BOOL IsVirtualPort() const  
-	{ return (GetCurData() & DATA_VIRTUAL_MASK); }
-	inline int GetPortNum() const 
-	{ return GetCurData() & DATA_PORT_MASK; }
-	inline bool GetFileName(CString& str) const
-	{ return CEnumDevices::GetFileName(GetPortNum(), str); }
+	//inline BOOL InitList(LPCTSTR lpszPort) 
+	//{ return InitList(CEnumDevices::GetPortFromName(lpszPort)); }
+	//inline BOOL IsPhysicalPort() const  
+	//{ return GetCurData() && !(GetCurData() & DATA_VIRTUAL_MASK); }
+	//inline BOOL IsVirtualPort() const  
+	//{ return (GetCurData() & DATA_VIRTUAL_MASK); }
+	//inline int GetPortNum() const 
+	//{ return GetCurData() & DATA_PORT_MASK; }
+	//inline bool GetFileName(CString& str) const
+	//{ return CEnumDevices::GetFileName(GetPortNum(), str); }
 
 	inline void SetNoneItem(BOOL bSet = 1) { m_bNoneItem = bSet; }
 	inline void SetOnlyPhysical(BOOL bSet = 1) { m_bOnlyPhysical = bSet; }
@@ -31,8 +31,8 @@ public:
 	inline void SetNoneStr(LPCTSTR s) { ASSERT(s && *s); m_strNone = s; }
 
 protected:
-	static void CALLBACK CallbackWrapper(CObject* pObject, const CEnumDevInfo* pInfo);
-	void AddItem(const CEnumDevInfo* pInfo);
+	//static void CALLBACK CallbackWrapper(CObject* pObject, const CEnumDevInfo* pInfo);
+	//void AddItem(const CEnumDevInfo* pInfo);
 	int GetCurData() const;
 
 	BOOL			m_bNoneItem;

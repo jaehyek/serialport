@@ -39,11 +39,13 @@ BOOL CComPortCombo::InitList(int nDefPort /*= -1*/)
 {
 	// Should be drop-down list without edit field.
 	// CBS_DROPDOWNLIST = 3 while CBS_SIMPLE = 1 and CBS_DROPDOWN = 2
+
+	int i; 
 	ASSERT((GetStyle() & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST);
 
 	m_nDefPort = nDefPort;							// use member var for access by call back function
 	if (m_nDefPort < 0)								// when no default port specified
-		m_nDefPort = GetPortNum();					//  use the currently selected one upon re-loading
+		m_nDefPort = 0;					//  use the currently selected one upon re-loading
 	ResetContent();
 	if (m_bNoneItem)
 	{
@@ -51,35 +53,51 @@ BOOL CComPortCombo::InitList(int nDefPort /*= -1*/)
 		SetItemData(nItem, 0);
 	}
 
-	CEnumDevices Enum;
-	BOOL bResult = Enum.EnumSerialPorts(this, CallbackWrapper, m_bOnlyPresent);
+	CEnumerateSerial::CPortsArray ports;
+	CEnumerateSerial::CNamesArray names;
 
-	// If no port pre-selected and none item used or only one port present, select first item.
-	if (bResult && GetCurSel() < 0 && (m_bNoneItem || GetCount() == 1))
-		SetCurSel(0);
-	return bResult;
-}
-
-// Static wrapper function to add list items.
-// Called by the CEnumDevices enumeration function.
-/*static*/ void CComPortCombo::CallbackWrapper(CObject* pObject, const CEnumDevInfo* pInfo)
-{
-	ASSERT(pObject != NULL);
-	CComPortCombo* pThis = reinterpret_cast<CComPortCombo*>(pObject);
-	ASSERT(pThis->IsKindOf(RUNTIME_CLASS(CComPortCombo)));
-	pThis->AddItem(pInfo);
-}
-
-void CComPortCombo::AddItem(const CEnumDevInfo* pInfo)
-{
-	ASSERT(pInfo != NULL);
-
-	if (pInfo->m_nPortNum > 0 &&
-		(!m_bOnlyPhysical || !(pInfo->m_nPortNum & DATA_VIRTUAL_MASK)))
+	if (CEnumerateSerial::UsingSetupAPI2(ports, names))
 	{
-		int nItem = AddString(pInfo->m_strName.GetString());
-		SetItemData(nItem, static_cast<DWORD>(pInfo->m_nPortNum));
-		if ((pInfo->m_nPortNum & DATA_PORT_MASK) == m_nDefPort)
-			SetCurSel(nItem);
+		CString strtemp;
+#ifdef CENUMERATESERIAL_USE_STL
+		for (i = 0; i < ports.size(); i++)
+		{
+			strtemp.Format(_T("%s COM%u"), names[i].c_str(), ports[i] );
+			int nItem = AddString(strtemp);
+			SetItemData(nItem, ports[i]);
+
+		}
+#else
+		for (i = 0; i<ports.GetSize(); i++)
+			_tprintf(_T("COM%u <%s>\n"), ports[i], names[i].operator LPCTSTR());
+#endif
 	}
+
+	SetCurSel(0);
+	return 0;
 }
+
+//
+//// Static wrapper function to add list items.
+//// Called by the CEnumDevices enumeration function.
+///*static*/ void CComPortCombo::CallbackWrapper(CObject* pObject, const CEnumDevInfo* pInfo)
+//{
+//	ASSERT(pObject != NULL);
+//	CComPortCombo* pThis = reinterpret_cast<CComPortCombo*>(pObject);
+//	ASSERT(pThis->IsKindOf(RUNTIME_CLASS(CComPortCombo)));
+//	pThis->AddItem(pInfo);
+//}
+//
+//void CComPortCombo::AddItem(const CEnumDevInfo* pInfo)
+//{
+//	ASSERT(pInfo != NULL);
+//
+//	if (pInfo->m_nPortNum > 0 &&
+//		(!m_bOnlyPhysical || !(pInfo->m_nPortNum & DATA_VIRTUAL_MASK)))
+//	{
+//		int nItem = AddString(pInfo->m_strName.GetString());
+//		SetItemData(nItem, static_cast<DWORD>(pInfo->m_nPortNum));
+//		if ((pInfo->m_nPortNum & DATA_PORT_MASK) == m_nDefPort)
+//			SetCurSel(nItem);
+//	}
+//}

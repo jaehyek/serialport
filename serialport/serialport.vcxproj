@@ -186,7 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComPortCombo.h" />
-    <ClInclude Include="EnumDevices.h" />
+    <ClInclude Include="EnumSerial.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SerialCtrl.h" />
     <ClInclude Include="serialport.h" />
@@ -196,7 +196,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComPortCombo.cpp" />
-    <ClCompile Include="EnumDevices.cpp" />
+    <ClCompile Include="EnumSerial.cpp" />
     <ClCompile Include="SerialCtrl.cpp" />
     <ClCompile Include="serialport.cpp" />
     <ClCompile Include="serialportDlg.cpp" />

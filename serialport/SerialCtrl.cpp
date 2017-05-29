@@ -155,6 +155,13 @@ BOOL SerialCtrl::Read(char * inputData, const unsigned int & sizeBuffer, unsigne
 
 BOOL SerialCtrl::Write(const char * outputData, const unsigned int & sizeBuffer, unsigned long & length)
 {
+	char a, b, c, d, e;
+	a = outputData[0];
+	b = outputData[1];
+	c = outputData[2];
+	d = outputData[3];
+	e = outputData[3];
+
 	if (length > 0)
 	{
 		if (WriteFile(m_portHandle, // handle to file to write to
@@ -223,7 +230,7 @@ int SerialThread::Run()
 				else
 				{
 					m_serialIO->OnEventOpen(FALSE);
-				    m_serialIO->SetPortActivate(FALSE);
+					m_serialIO->SetPortActivate(FALSE);
 				}
 				
 			}
@@ -234,7 +241,7 @@ int SerialThread::Run()
 				unsigned long lenMessage;
 				if(serialCtrl().Read(message,lenBuff,lenMessage)==TRUE)
 				{
-				      if(lenMessage>0)
+					  if(lenMessage>0)
 						  m_serialIO->OnEventRead(CString(message),lenMessage);
 				}
 				else
@@ -398,7 +405,7 @@ void CSerialIO::OnEventClose(BOOL bSuccess)
 }
 void CSerialIO::OnEventRead(CString inPacket,int inLength)
 {
-    
+	
 	return;
 }
 

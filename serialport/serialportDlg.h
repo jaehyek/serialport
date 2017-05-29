@@ -40,10 +40,6 @@ public:
     virtual void OnEventWrite(int nWritten);
 
     CComPortCombo m_comboPorts;
-    CButton m_CheckOnlyPhysical;
-    CButton m_CheckOnlyPresent;
-    afx_msg void OnBnClickedOnlyPhysical();
-    afx_msg void OnBnClickedOnlyPresent();
     afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 
     CComboBox m_comboBR;

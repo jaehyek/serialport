@@ -62,8 +62,6 @@ void CserialportDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_COMBO1, m_comboPorts);
-    DDX_Control(pDX, IDC_CHECK1, m_CheckOnlyPhysical);
-    DDX_Control(pDX, IDC_CHECK2, m_CheckOnlyPresent);
     DDX_Control(pDX, IDC_COMBO_BR, m_comboBR);
     DDX_Control(pDX, IDC_BUTTON_OPEN, m_btnOpen);
     DDX_Control(pDX, IDC_EDIT_WRITE, m_editWrite);
@@ -75,8 +73,6 @@ BEGIN_MESSAGE_MAP(CserialportDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-    ON_BN_CLICKED(IDC_CHECK1, &CserialportDlg::OnBnClickedOnlyPhysical)
-    ON_BN_CLICKED(IDC_CHECK2, &CserialportDlg::OnBnClickedOnlyPresent)
     ON_WM_DEVICECHANGE()
     ON_BN_CLICKED(IDC_BUTTON_OPEN, &CserialportDlg::OnBnClickedButtonOpen)
     ON_BN_CLICKED(IDC_BUTTON_WR, &CserialportDlg::OnBnClickedButtonWr)
@@ -142,13 +138,11 @@ BOOL CserialportDlg::OnInitDialog()
     //	strPort = AfxGetApp()->GetProfileString(_T("Config"), _T("ComPort2Str"));
 
 
-    m_CheckOnlyPresent.SetCheck(BST_UNCHECKED);
-
     m_comboBR.InsertString(0, CString("4800"));
     m_comboBR.InsertString(1, CString("9600"));
     m_comboBR.InsertString(2, CString("19200"));
     m_comboBR.InsertString(3, CString("115200"));
-    m_comboBR.SetCurSel(1);
+    m_comboBR.SetCurSel(2);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -203,28 +197,6 @@ HCURSOR CserialportDlg::OnQueryDragIcon()
 }
 
 
-
-void CserialportDlg::OnBnClickedOnlyPhysical()
-{
-    // Pass option to include/exclude non-physical ports.
-    m_comboPorts.SetOnlyPhysical(m_CheckOnlyPhysical.GetCheck() == BST_CHECKED);
-
-    // Update the lists.
-    m_comboPorts.InitList();
-
-}
-
-
-void CserialportDlg::OnBnClickedOnlyPresent()
-{
-    // Pass option to include/exclude non-present ports.
-    m_comboPorts.SetOnlyPresent(m_CheckOnlyPresent.GetCheck() == BST_CHECKED);
-
-    // Update the lists.
-    m_comboPorts.InitList();
-
-}
-
 // WM_DEVICECHANGE handler.
 // Used here to detect plug-in and -out of devices providing virtual COM ports.
 // May open/close the configured virtual serial port when it matches the plugged device.
@@ -237,18 +209,9 @@ BOOL CserialportDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
     // Assume port changing (serial or parallel). The devicetype field is part of header of all structures.
     // The name passed here is always the COM port name (even with virtual ports).
     PDEV_BROADCAST_PORT pPort = reinterpret_cast<PDEV_BROADCAST_PORT>(dwData);
-    if ((nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) &&
-        pPort &&
-        pPort->dbcp_devicetype == DBT_DEVTYP_PORT &&	// serial or parallel port
-        CEnumDevices::GetPortFromName(pPort->dbcp_name) > 0)
+    if (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) 
     {
-        if (nEventType == DBT_DEVICEARRIVAL)
-            TRACE1("Device %s is now available\n", pPort->dbcp_name);
-        else
-            TRACE1("Device %s has been removed\n", pPort->dbcp_name);
-        // Update the lists.
         m_comboPorts.InitList();
-
     }
     return bResult;
 }
@@ -324,8 +287,8 @@ void CserialportDlg::OnBnClickedButtonOpen()
         CString strBaudRate;
         int nPortNum; 
         //m_comboPorts.GetLBText(m_comboPorts.GetCurSel(), strPortName);
-        nPortNum = m_comboPorts.GetItemData(m_comboPorts.GetCurSel());
-        strPortName.Format(_T("COM%d"), nPortNum); 
+        nPortNum = (int)m_comboPorts.GetItemData(m_comboPorts.GetCurSel());
+        strPortName.Format(_T("\\\\.\\COM%d"), nPortNum); 
 
         m_comboBR.GetLBText(m_comboBR.GetCurSel(), strBaudRate);
         OpenPort(strPortName, strBaudRate);
@@ -343,5 +306,5 @@ void CserialportDlg::OnBnClickedButtonWr()
 {
     CString strW;
     m_editWrite.GetWindowText(strW);
-    Write(strW, strW.GetLength());
+    Write(strW + CString("\r") , strW.GetLength()+1);
 }
