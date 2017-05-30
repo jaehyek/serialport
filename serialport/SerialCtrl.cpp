@@ -11,7 +11,8 @@ SerialCtrl::SerialCtrl(void):m_portStatus(FALSE),m_portHandle(NULL)
 
 SerialCtrl::~SerialCtrl(void)
 {
-	m_portHandle = NULL;
+	if (m_portStatus == TRUE)
+		ClosePort();
 }
 
 void SerialCtrl::SetPortStatus(BOOL bOnOff)
@@ -29,7 +30,7 @@ HANDLE SerialCtrl::GetPortHandle(void)
 	return m_portHandle;
 }
 
-BOOL SerialCtrl::OpenPort(DCB dcb, CString portName)
+BOOL SerialCtrl::OpenPort(DCB* dcb, CString portName)
 {
 
 	if (m_portStatus == FALSE)  // if port is opened already, not open port again.
@@ -49,10 +50,10 @@ BOOL SerialCtrl::OpenPort(DCB dcb, CString portName)
 			return FALSE;
 		}
 		// Assign user parameter.
-		m_portConfig.BaudRate = dcb.BaudRate;    // Specify buad rate of communicaiton.
-		m_portConfig.StopBits = dcb.StopBits;    // Specify stopbit of communication.
-		m_portConfig.Parity = dcb.Parity;        // Specify parity of communication.
-		m_portConfig.ByteSize = dcb.ByteSize;    // Specify  byte of size of communication.
+		m_portConfig.BaudRate = dcb->BaudRate;    // Specify buad rate of communicaiton.
+		m_portConfig.StopBits = dcb->StopBits;    // Specify stopbit of communication.
+		m_portConfig.Parity = dcb->Parity;        // Specify parity of communication.
+		m_portConfig.ByteSize = dcb->ByteSize;    // Specify  byte of size of communication.
 
 		// Set current configuration of serial communication port.
 		if (SetCommState(m_portHandle,&m_portConfig) == 0)
@@ -132,49 +133,50 @@ BOOL SerialCtrl::OpenPort(CString baudRate, CString portName)
 		break;
 	}
 
-	return OpenPort(configSerial,portName);
+	return OpenPort(&configSerial,portName);
 }
-BOOL SerialCtrl::Read(char * inputData, const unsigned int & sizeBuffer, unsigned long & length)
+BOOL SerialCtrl::Read(char * inputData, unsigned int sizeBuffer, unsigned long & readlength)
 {
-	if (ReadFile(m_portHandle,  // handle of file to read
-		inputData,               // handle of file to read
-		sizeBuffer,              // number of bytes to read
-		&length,                 // pointer to number of bytes read
-		NULL) == 0)              // pointer to structure for data
+	if (m_portStatus == TRUE )
 	{
-		// AfxMessageBox("Reading of serial communication has problem.");
-		return FALSE;
+		if (ReadFile(m_portHandle,  // handle of file to read
+			inputData,               // handle of file to read
+			sizeBuffer,              // number of bytes to read
+			&readlength,                 // pointer to number of bytes read
+			NULL) == 0)              // pointer to structure for data
+		{
+			// AfxMessageBox("Reading of serial communication has problem.");
+			return FALSE;
+		}
+		if (readlength > 0)
+		{
+			inputData[readlength] = NULL; // Assign end flag of message.
+			return TRUE;
+		}
+		return TRUE;
 	}
-	if (length > 0)
-	{
-		inputData[length] = NULL; // Assign end flag of message.
-		return TRUE;  
-	}  
-	return TRUE;
+	else
+		return FALSE;
+
 }
 
-BOOL SerialCtrl::Write(const char * outputData, const unsigned int & sizeBuffer, unsigned long & length)
+BOOL SerialCtrl::Write(const char * outputData, unsigned int  sizeBuffer, unsigned long & Written)
 {
-	char a, b, c, d, e;
-	a = outputData[0];
-	b = outputData[1];
-	c = outputData[2];
-	d = outputData[3];
-	e = outputData[4];
 
-	if (length > 0)
+	if (m_portStatus == TRUE && sizeBuffer > 0)
 	{
 		if (WriteFile(m_portHandle, // handle to file to write to
 			outputData,              // pointer to data to write to file
 			sizeBuffer,              // number of bytes to write
-			&length,NULL) == 0)      // pointer to number of bytes written
+			&Written,NULL) == 0)      // pointer to number of bytes written
 		{
 			AfxMessageBox(CString("Reading of serial communication has problem."));
 			return FALSE;
 		}
 		return TRUE;
 	}
-	return FALSE;
+	else
+		return FALSE;
 }
 
 BOOL SerialCtrl::ClosePort(void)
@@ -216,70 +218,67 @@ BOOL SerialThread::InitInstance()
 int SerialThread::Run()
 {
 	// Check signal controlling and status to open serial communication.
-	while(1)
+
+	while(m_serialIO->GetProcessActivateValue()==TRUE)
 	{
-
-		while(m_serialIO->GetProcessActivateValue()==TRUE)
+		if ((serialCtrl().GetPortStatus()==FALSE)&&m_serialIO->GetPortActivateValue()==TRUE)
 		{
-			if ((serialCtrl().GetPortStatus()==FALSE)&&m_serialIO->GetPortActivateValue()==TRUE)
+			if(serialCtrl().OpenPort(&m_serialIO->m_DCB,m_serialIO->m_strPortName)==TRUE)
 			{
-				if(serialCtrl().OpenPort(m_serialIO->m_DCB,m_serialIO->m_strPortName)==TRUE)
-				{
-					m_serialIO->OnEventOpen(TRUE);
-				}
-				else
-				{
-					m_serialIO->OnEventOpen(FALSE);
-					m_serialIO->SetPortActivate(FALSE);
-				}
-				
+				m_serialIO->OnEventOpen(TRUE);
 			}
-			else if (m_serialIO->GetPortActivateValue()==TRUE)
+			else
 			{
-				char message[MAX_MESSAGE]={0};
-				unsigned int lenBuff = MAX_MESSAGE;
-				unsigned long lenMessage;
-				if(serialCtrl().Read(message,lenBuff,lenMessage)==TRUE)
-				{
-					  if(lenMessage>0)
-						  m_serialIO->OnEventRead(CString(message),lenMessage);
-				}
-				else
-				{
-					//m_serialIO->SetProcessActivate(FALSE);
-				}
-
+				m_serialIO->OnEventOpen(FALSE);
+				m_serialIO->SetPortActivate(FALSE);
+			}
+				
+		}
+		else if (m_serialIO->GetPortActivateValue()==TRUE)
+		{
+			char message[MAX_MESSAGE] ;
+			unsigned int lenBuff = MAX_MESSAGE;
+			unsigned long lenMessage;
+			if(serialCtrl().Read(message,lenBuff,lenMessage)==TRUE)
+			{
+					if(lenMessage>0)
+						m_serialIO->OnEventRead(CString(message),lenMessage);
+			}
+			else
+			{
+				//m_serialIO->SetProcessActivate(FALSE);
 			}
 
-			if (m_serialIO->GetSendActivateValue()==TRUE)
-			{
-				unsigned long nWritten;
-				if(serialCtrl().Write(m_serialIO->m_sendBuffer,m_serialIO->m_sendSize,nWritten)==TRUE)
-				{
-					m_serialIO->OnEventWrite(nWritten);
-				}
-				else
-				{
-					m_serialIO->OnEventWrite(-1);
-				}
-				m_serialIO->SetSendActivate(FALSE);
-			}
-			if (m_serialIO->m_bClosePort==TRUE)
-			{
-				if (serialCtrl().ClosePort()==TRUE)
-				{
-					m_serialIO->OnEventClose(TRUE);
-				}
-				else
-				{
-					m_serialIO->OnEventClose(FALSE);
-				}
-				m_serialIO->m_bClosePort=FALSE;
-				
-			}
 		}
 
+		if (m_serialIO->GetSendActivateValue()==TRUE)
+		{
+			unsigned long nWritten = 0 ;
+			if(serialCtrl().Write(m_serialIO->m_sendBuffer,m_serialIO->m_sendSize,nWritten)==TRUE)
+			{
+				m_serialIO->OnEventWrite(nWritten);
+			}
+			else
+			{
+				m_serialIO->OnEventWrite(-1);
+			}
+			m_serialIO->SetSendActivate(FALSE);
+		}
+		if (m_serialIO->m_bClosePort==TRUE)
+		{
+			if (serialCtrl().ClosePort()==TRUE)
+			{
+				m_serialIO->OnEventClose(TRUE);
+			}
+			else
+			{
+				m_serialIO->OnEventClose(FALSE);
+			}
+			m_serialIO->m_bClosePort=FALSE;
+				
+		}
 	}
+
 	return 0;
 }
 void SerialThread::ClosePort()
@@ -303,15 +302,13 @@ CSerialIO:: ~CSerialIO()
 {
 	UnInit();
 }
-BOOL CSerialIO::Init()
-{
-	m_serialProcess = (SerialThread*)AfxBeginThread(RUNTIME_CLASS(SerialThread), THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-	m_serialProcess->setOwner(this);
 
+void CSerialIO::UpdateDCB(void)
+{
 	m_DCB.ByteSize = 8;
 	m_DCB.StopBits = ONESTOPBIT;
 	m_DCB.Parity = NOPARITY;
-	switch(_wtoi(m_strBaudRate))
+	switch (_wtoi(m_strBaudRate))
 	{
 	case 110:
 		m_DCB.BaudRate = CBR_110;
@@ -349,7 +346,7 @@ BOOL CSerialIO::Init()
 	case 57600:
 		m_DCB.BaudRate = CBR_57600;
 		break;
-	case 115200 :
+	case 115200:
 		m_DCB.BaudRate = CBR_115200;
 		break;
 	case 128000:
@@ -361,6 +358,15 @@ BOOL CSerialIO::Init()
 	default:
 		break;
 	}
+}
+
+BOOL CSerialIO::Init()
+{
+	m_serialProcess = (SerialThread*)AfxBeginThread(RUNTIME_CLASS(SerialThread), THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+	m_serialProcess->setOwner(this);
+
+	UpdateDCB();
+
 	m_bProccessActivate=TRUE;
 	m_serialProcess->ResumeThread();
 	return TRUE;
@@ -380,6 +386,7 @@ void CSerialIO::OpenPort(CString strPortName,CString strBaudRate)
 	 m_strBaudRate=strBaudRate;
 	 m_strPortName=strPortName;
 	 m_bPortActivate=TRUE;
+	 UpdateDCB();
 	 
  }
 void CSerialIO::OnEventOpen(BOOL bSuccess)
@@ -413,6 +420,7 @@ void CSerialIO::Write( char* outPacket,int outLength)
 {
 	if(outLength<=MAX_SEND_BUFFER)
 	{
+		m_sendBuffer[outLength] = 0; 
 		memcpy(m_sendBuffer,outPacket,outLength);
 		m_sendSize=outLength;
 		SetSendActivate(TRUE);

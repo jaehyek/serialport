@@ -18,10 +18,10 @@ public:
 	void SetPortStatus(BOOL bOnOff);
 	BOOL GetPortStatus(void);
 	HANDLE GetPortHandle(void);
-	BOOL OpenPort(DCB dcb, CString portName=CString("COM1"));
+	BOOL OpenPort(DCB* dcb, CString portName=CString("COM1"));
 	BOOL OpenPort(CString baudRate=CString("115200"), CString portName=CString("COM1"));
-	BOOL Read(char * inputData, const unsigned int & sizeBuffer, unsigned long & length);
-	BOOL Write(const char *outputData, const unsigned int & sizeBuffer, unsigned long & length);
+	BOOL Read(char * inputData,  unsigned int sizeBuffer, unsigned long & readlength);
+	BOOL Write(const char *outputData, unsigned int  sizeBuffer, unsigned long & Written);
 	BOOL ClosePort(void);
 };
 
@@ -81,6 +81,7 @@ public:
 	unsigned int m_sendSize;
 	CString	m_strPortName;
 	BOOL m_bClosePort;
+	void UpdateDCB(void);
 private:
 	BOOL Init();
 	void UnInit();

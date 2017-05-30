@@ -12,31 +12,31 @@ class CserialportDlg : public CDialogEx, public CSerialIO
 {
 // 생성입니다.
 public:
-	CserialportDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
+    CserialportDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_SERIALPORT_DIALOG };
+    enum { IDD = IDD_SERIALPORT_DIALOG };
 #endif
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
+    protected:
+    virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
 
 
 // 구현입니다.
 protected:
-	HICON m_hIcon;
+    HICON m_hIcon;
 
-	// 생성된 메시지 맵 함수
-	virtual BOOL OnInitDialog();
-	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
-	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
-	DECLARE_MESSAGE_MAP()
+    // 생성된 메시지 맵 함수
+    virtual BOOL OnInitDialog();
+    afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
+    afx_msg void OnPaint();
+    afx_msg HCURSOR OnQueryDragIcon();
+    DECLARE_MESSAGE_MAP()
 public:
     virtual void OnEventOpen(BOOL bSuccess);
     virtual void OnEventClose(BOOL bSuccess);
-    virtual void OnEventRead(char *inPacket, int inLength);
+    virtual void OnEventRead(CString inPacket, int inLength);
     virtual void OnEventWrite(int nWritten);
 
     CComPortCombo m_comboPorts;

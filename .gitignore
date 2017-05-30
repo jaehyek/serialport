@@ -1,3 +1,7 @@
 *.ipch
 serialport/Debug/
 serialport.sdf
+serialport/x64/
+x64/
+.vs/
+*.aps

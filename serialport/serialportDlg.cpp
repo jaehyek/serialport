@@ -53,29 +53,29 @@ END_MESSAGE_MAP()
 
 CserialportDlg::CserialportDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_SERIALPORT_DIALOG, pParent)
-    , bPortOpened(FALSE)
+	, bPortOpened(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CserialportDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialogEx::DoDataExchange(pDX);
-    DDX_Control(pDX, IDC_COMBO1, m_comboPorts);
-    DDX_Control(pDX, IDC_COMBO_BR, m_comboBR);
-    DDX_Control(pDX, IDC_BUTTON_OPEN, m_btnOpen);
-    DDX_Control(pDX, IDC_EDIT_WRITE, m_editWrite);
-    DDX_Control(pDX, IDC_LIST_READ, m_listboxRead);
-    DDX_Control(pDX, IDC_STATIC_INFO, m_staticInfo);
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_COMBO1, m_comboPorts);
+	DDX_Control(pDX, IDC_COMBO_BR, m_comboBR);
+	DDX_Control(pDX, IDC_BUTTON_OPEN, m_btnOpen);
+	DDX_Control(pDX, IDC_EDIT_WRITE, m_editWrite);
+	DDX_Control(pDX, IDC_LIST_READ, m_listboxRead);
+	DDX_Control(pDX, IDC_STATIC_INFO, m_staticInfo);
 }
 
 BEGIN_MESSAGE_MAP(CserialportDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-    ON_WM_DEVICECHANGE()
-    ON_BN_CLICKED(IDC_BUTTON_OPEN, &CserialportDlg::OnBnClickedButtonOpen)
-    ON_BN_CLICKED(IDC_BUTTON_WR, &CserialportDlg::OnBnClickedButtonWr)
+	ON_WM_DEVICECHANGE()
+	ON_BN_CLICKED(IDC_BUTTON_OPEN, &CserialportDlg::OnBnClickedButtonOpen)
+	ON_BN_CLICKED(IDC_BUTTON_WR, &CserialportDlg::OnBnClickedButtonWr)
 END_MESSAGE_MAP()
 
 
@@ -129,20 +129,24 @@ BOOL CserialportDlg::OnInitDialog()
 
 // When a serial port has been configured in the past or is in use,
 //  pass the port number here to be pre-selected in the list.
-    int nPortNum = AfxGetApp()->GetProfileInt(_T("Config"), _T("ComPort1"), -1);
-    m_comboPorts.InitList(nPortNum);
+	int nPortNum = AfxGetApp()->GetProfileInt(_T("Config"), _T("ComPort1"), -1);
+	m_comboPorts.InitList(nPortNum);
 
-    // You may also use the COM port file name "COM<n>" or "\\.\COM<n>".
-    //	CString strPort = AfxGetApp()->GetProfileString(_T("Config"), _T("ComPort1Str"));
-    //	m_comboPorts.InitList(strPort.GetString());
-    //	strPort = AfxGetApp()->GetProfileString(_T("Config"), _T("ComPort2Str"));
+	// You may also use the COM port file name "COM<n>" or "\\.\COM<n>".
+	//	CString strPort = AfxGetApp()->GetProfileString(_T("Config"), _T("ComPort1Str"));
+	//	m_comboPorts.InitList(strPort.GetString());
+	//	strPort = AfxGetApp()->GetProfileString(_T("Config"), _T("ComPort2Str"));
 
 
-    m_comboBR.InsertString(0, CString("4800"));
-    m_comboBR.InsertString(1, CString("9600"));
-    m_comboBR.InsertString(2, CString("19200"));
-    m_comboBR.InsertString(3, CString("115200"));
-    m_comboBR.SetCurSel(2);
+	m_comboBR.InsertString(0, CString("4800"));
+	m_comboBR.InsertString(1, CString("9600"));
+	m_comboBR.InsertString(2, CString("14400"));
+	m_comboBR.InsertString(3, CString("19200"));
+	m_comboBR.InsertString(4, CString("38400"));
+	m_comboBR.InsertString(5, CString("56000"));
+	m_comboBR.InsertString(6, CString("115200"));
+	m_comboBR.InsertString(7, CString("128000"));
+	m_comboBR.SetCurSel(3);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -202,112 +206,114 @@ HCURSOR CserialportDlg::OnQueryDragIcon()
 // May open/close the configured virtual serial port when it matches the plugged device.
 BOOL CserialportDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 {
-    TRACE1("WM_DEVICECHANGE event %#X\n", nEventType);
+	TRACE1("WM_DEVICECHANGE event %#X\n", nEventType);
 
-    BOOL bResult = CDialog::OnDeviceChange(nEventType, dwData);
+	BOOL bResult = CDialog::OnDeviceChange(nEventType, dwData);
 
-    // Assume port changing (serial or parallel). The devicetype field is part of header of all structures.
-    // The name passed here is always the COM port name (even with virtual ports).
-    PDEV_BROADCAST_PORT pPort = reinterpret_cast<PDEV_BROADCAST_PORT>(dwData);
-    if (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) 
-    {
-        m_comboPorts.InitList();
-    }
-    return bResult;
+	// Assume port changing (serial or parallel). The devicetype field is part of header of all structures.
+	// The name passed here is always the COM port name (even with virtual ports).
+	PDEV_BROADCAST_PORT pPort = reinterpret_cast<PDEV_BROADCAST_PORT>(dwData);
+	if (nEventType == DBT_DEVNODES_CHANGED )
+	{
+		m_comboPorts.InitList();
+	}
+	return bResult;
 }
 
 
 void CserialportDlg::OnEventOpen(BOOL bSuccess)
 {
-    CString str;
-    if (bSuccess)
-    {
-        str = m_strPortName + CString(" open successfully");
+	CString str;
+	if (bSuccess)
+	{
+		str = m_strPortName + CString(" open successfully");
 
-        bPortOpened = TRUE;
-        m_btnOpen.SetWindowText(CString("Close"));
+		bPortOpened = TRUE;
+		m_btnOpen.SetWindowText(CString("Close"));
 
-    }
-    else
-    {
-        str = m_strPortName + CString(" open failed");
-    }
-    m_staticInfo.SetWindowText(str);
+	}
+	else
+	{
+		str = m_strPortName + CString(" open failed");
+	}
+	m_staticInfo.SetWindowText(str);
 }
 
 void CserialportDlg::OnEventClose(BOOL bSuccess)
 {
-    CString str;
-    if (bSuccess)
-    {
-        str = m_strPortName + CString(" close successfully");
-        bPortOpened = FALSE;
-        m_btnOpen.SetWindowText(CString("Open"));
+	CString str;
+	if (bSuccess)
+	{
+		str = m_strPortName + CString(" close successfully");
+		bPortOpened = FALSE;
+		m_btnOpen.SetWindowText(CString("Open"));
 
-    }
-    else
-    {
-        str = m_strPortName + CString(" close failed");
-    }
-    m_staticInfo.SetWindowText(str);
+	}
+	else
+	{
+		str = m_strPortName + CString(" close failed");
+	}
+	m_staticInfo.SetWindowText(str);
 }
 
-void CserialportDlg::OnEventRead(char *inPacket, int inLength)
+void CserialportDlg::OnEventRead(CString inPacket, int inLength)
 {
 
-    m_listboxRead.AddString((LPCTSTR)inPacket);
+	m_listboxRead.AddString(inPacket);
 
-    CString str;
-    str.Format(CString("%d bytes read"), inLength);
+	CString str;
+	str.Format(CString("%d bytes read"), inLength);
 
-    m_staticInfo.SetWindowText(str);
+	m_staticInfo.SetWindowText(str);
 
 }
 void CserialportDlg::OnEventWrite(int nWritten)
 {
-    if (nWritten>0)
-    {
-        CString str;
-        str.Format(CString("%d bytes written"), nWritten);
-        m_staticInfo.SetWindowText(str);
-    }
-    else
-    {
-        m_staticInfo.SetWindowText(CString("Write failed"));
-    }
+	if (nWritten>0)
+	{
+		CString str;
+		str.Format(CString("%d bytes written"), nWritten);
+		m_staticInfo.SetWindowText(str);
+	}
+	else
+	{
+		m_staticInfo.SetWindowText(CString("Write failed"));
+	}
 
 }
 
 
 void CserialportDlg::OnBnClickedButtonOpen()
 {
-    if (bPortOpened == FALSE)
-    {
-        CString strPortName;
-        CString strBaudRate;
-        int nPortNum; 
-        //m_comboPorts.GetLBText(m_comboPorts.GetCurSel(), strPortName);
-        nPortNum = (int)m_comboPorts.GetItemData(m_comboPorts.GetCurSel());
-        strPortName.Format(_T("\\\\.\\COM%d"), nPortNum); 
+	if (bPortOpened == FALSE)
+	{
+		CString strPortName;
+		CString strBaudRate;
+		int nPortNum; 
+		//m_comboPorts.GetLBText(m_comboPorts.GetCurSel(), strPortName);
+		nPortNum = (int)m_comboPorts.GetItemData(m_comboPorts.GetCurSel());
+		strPortName.Format(_T("\\\\.\\COM%d"), nPortNum); 
 
-        m_comboBR.GetLBText(m_comboBR.GetCurSel(), strBaudRate);
-        OpenPort(strPortName, strBaudRate);
+		m_comboBR.GetLBText(m_comboBR.GetCurSel(), strBaudRate);
+		OpenPort(strPortName, strBaudRate);
 
-    }
-    else
-    {
-        ClosePort();
+	}
+	else
+	{
+		ClosePort();
 
-    }
+	}
 }
 
 
 void CserialportDlg::OnBnClickedButtonWr()
 {
-    CString strW;
-    m_editWrite.GetWindowText(strW);
+	CString strW;
+	m_editWrite.GetWindowText(strW);
 
-    CT2A ascii(strW);
+	//strW += CString("\r");
 
-    Write(ascii.m_psz , strlen(ascii.m_psz) );
+	CT2A ascii(strW);
+
+	Write(ascii.m_psz , (int)strlen(ascii.m_psz) );
 }
